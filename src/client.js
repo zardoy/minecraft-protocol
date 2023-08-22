@@ -250,8 +250,10 @@ class Client extends EventEmitter {
 
   write (name, params) {
     if (!this.customCommunication && !this.serializer.writable) { return }
-    debug(`[${this.state}] from ${this.isServer ? 'server' : 'client'}: ` + name)
-    debug(params)
+    if (!globalThis.excludeCommunicationDebugEvents?.includes(name)) {
+      debug(`[${this.state}] from ${this.isServer ? 'server' : 'client'}: ` + name)
+      debug(params)
+    }
 
     if (this.customCommunication) {
       this.customCommunication.sendData.call(this, { name, params, state: this.state })
