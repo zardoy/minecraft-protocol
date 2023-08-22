@@ -88,10 +88,12 @@ class Client extends EventEmitter {
       parsed.metadata.name = parsed.data.name
       parsed.data = parsed.data.params
       parsed.metadata.state = state
-      debug('read packet ' + state + '.' + parsed.metadata.name)
-      if (debug.enabled) {
-        const s = JSON.stringify(parsed.data, null, 2)
-        debug(s && s.length > 10000 ? parsed.data : s)
+      if (!globalThis.excludeCommunicationDebugEvents?.includes(parsed.metadata.name)) {
+        debug('read packet ' + state + '.' + parsed.metadata.name)
+        if (debug.enabled) {
+          const s = JSON.stringify(parsed.data, null, 2)
+          debug(s && s.length > 10000 ? parsed.data : s)
+        }
       }
       if (parsed.metadata.name === 'bundle_delimiter') {
         if (this._mcBundle.length) { // End bundle
@@ -231,8 +233,10 @@ class Client extends EventEmitter {
 
   write (name, params) {
     if (!this.serializer.writable) { return }
-    debug('writing packet ' + this.state + '.' + name)
-    debug(params)
+    if (!globalThis.excludeCommunicationDebugEvents?.includes(name)) {
+      debug(`[${this.state}] from ${this.isServer ? 'server' : 'client'}: ` + name)
+      debug(params)
+    }
     this.serializer.write({ name, params })
   }
 

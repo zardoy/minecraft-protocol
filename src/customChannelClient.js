@@ -18,7 +18,9 @@ class CustomChannelClient extends EventEmitter {
 
   setSerializer (state) {
     this.customCommunication.receiverSetup.call(this, (/** @type {{name, params, state?}} */parsed) => {
-      debug(`receive in ${this.isServer ? 'server' : 'client'}: ${parsed.name}`)
+      if (!globalThis.excludeCommunicationDebugEvents?.includes(name)) {
+        debug(`receive in ${this.isServer ? 'server' : 'client'}: ${parsed.name}`)
+      }
       this.emit(parsed.name, parsed.params, parsed)
       this.emit('packet_name', parsed.name, parsed.params, parsed)
     })
@@ -38,8 +40,10 @@ class CustomChannelClient extends EventEmitter {
   }
 
   write (name, params) {
-    debug(`[${this.state}] from ${this.isServer ? 'server' : 'client'}: ` + name)
-    debug(params)
+    if (!globalThis.excludeCommunicationDebugEvents?.includes(name)) {
+      debug(`[${this.state}] from ${this.isServer ? 'server' : 'client'}: ` + name)
+      debug(params)
+    }
 
     if (this.customCommunication) {
       this.customCommunication.sendData.call(this, { name, params, state: this.state })
