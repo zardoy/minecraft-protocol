@@ -14,6 +14,7 @@ const tcpDns = require('./client/tcp_dns')
 const autoVersion = require('./client/autoVersion')
 const pluginChannels = require('./client/pluginChannels')
 const versionChecking = require('./client/versionChecking')
+const defaultMcData = require('./defaultMcData')
 
 module.exports = createClient
 
@@ -23,17 +24,15 @@ function createClient (options) {
   if (!options.version && !options.realms) { options.version = false }
   if (options.realms && options.auth !== 'microsoft') throw new Error('Currently Realms can only be joined with auth: "microsoft"')
 
-  // TODO: avoid setting default version if autoVersion is enabled
-  const optVersion = options.version || require('./version').defaultVersion
-  const mcData = require('minecraft-data')(optVersion)
-  if (!mcData) throw new Error(`unsupported protocol version: ${optVersion}`)
-  const version = mcData.version
-  options.majorVersion = version.majorVersion
-  options.protocolVersion = version.version
+  const optVersion = options.version
+  const { version: mcDataVersion } = optVersion ? require('minecraft-data')(optVersion) ?? {} : defaultMcData
+  if (!mcDataVersion) throw new Error(`unsupported protocol version: ${optVersion}`)
+  options.majorVersion = mcDataVersion.majorVersion
+  options.protocolVersion = mcDataVersion.version
   const hideErrors = options.hideErrors || false
 
   const Client = options.customClient ?? DefaultClient
-  const client = new Client(false, version.minecraftVersion, options.customPackets, hideErrors, options.customCommunication)
+  const client = new Client(false, mcDataVersion.minecraftVersion, options.customPackets, hideErrors, options.customCommunication)
 
   tcpDns(client, options)
   if (options.auth instanceof Function) {

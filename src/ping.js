@@ -3,6 +3,7 @@
 const Client = require('./client')
 const states = require('./states')
 const tcpDns = require('./client/tcp_dns')
+const defaultMcData = require('./defaultMcData')
 
 module.exports = cbPing
 
@@ -21,16 +22,15 @@ function cbPing (options, cb) {
 function ping (options) {
   options.host = options.host || 'localhost'
   options.port = options.port || 25565
-  const optVersion = options.version || require('./version').defaultVersion
-  const mcData = require('minecraft-data')(optVersion)
-  const version = mcData.version
-  options.majorVersion = version.majorVersion
-  options.protocolVersion = version.version
+  const optVersion = options.version
+  const { version: mcDataVersion } = optVersion ? require('minecraft-data')(optVersion) : defaultMcData
+  options.majorVersion = mcDataVersion.majorVersion
+  options.protocolVersion = mcDataVersion.version
   let closeTimer = null
   options.closeTimeout = options.closeTimeout || 120 * 1000
   options.noPongTimeout = options.noPongTimeout || 5 * 1000
 
-  const client = new Client(false, version.minecraftVersion)
+  const client = new Client(false, mcDataVersion.minecraftVersion)
   return new Promise((resolve, reject) => {
     client.on('error', function (err) {
       clearTimeout(closeTimer)
