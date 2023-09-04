@@ -9,7 +9,7 @@ module.exports = function (client, options) {
   client.wait_connect = true // don't let src/client/setProtocol proceed on socket 'connect' until 'connect_allowed'
   debug('pinging', options.host)
   // TODO: use 0xfe ping instead for better compatibility/performance? https://github.com/deathcap/node-minecraft-ping
-  ping(options, function (err, response) {
+  ping(options, async function (err, response) {
     if (err) { return client.emit('error', err) }
     debug('ping response', response)
     // TODO: could also use ping pre-connect to save description, type, max players, etc.
@@ -40,6 +40,7 @@ module.exports = function (client, options) {
 
     // Reinitialize client object with new version TODO: move out of its constructor?
     client.version = minecraftVersion
+    await options?.versionSelectedHook(client)
     client.state = states.HANDSHAKING
 
     // Let other plugins such as Forge/FML (modinfo) respond to the ping response
