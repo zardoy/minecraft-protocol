@@ -192,6 +192,9 @@ class Client extends EventEmitter {
     serializer -> framer -> socket -> splitter -> deserializer */
     if (this.serializer) {
       this.serializer.end()
+      setTimeout(() => {
+        this.socket.emit('force-close')
+      }, 1000)
     } else {
       if (this.socket) this.socket.end()
     }
