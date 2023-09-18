@@ -163,7 +163,10 @@ class Client extends EventEmitter {
     }
 
     const onFatalError = (err) => {
-      this.emit('error', err)
+      // todo find out what is trying to write after client disconnect
+      if(err.code !== 'ECONNABORTED') {
+        this.emit('error', err)
+      }
       endSocket()
     }
 
@@ -240,6 +243,7 @@ class Client extends EventEmitter {
       debug(`[${this.state}] from ${this.isServer ? 'server' : 'client'}: ` + name)
       debug(params)
     }
+    this.emit('writePacket', name, params)
     this.serializer.write({ name, params })
   }
 
