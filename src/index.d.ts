@@ -136,11 +136,8 @@ declare module 'minecraft-protocol' {
 		realms?: RealmsOptions
 		// 1.19+
 		disableChatSigning?: boolean
-		customCommunication?: {
-			sendData(this: Client, { name, params, state }): void,
-			receiverSetup(this: Client, callback: (data: { name, params, state? }) => void): void
-		}
-		customClient?: Client
+		/** Pass custom client implementation if needed. */
+		Client?: Client
 		/** Can be used to prepare mc data on autoVersion (client.version has selected version) */
 		versionSelectedHook?: (client: Client) => Promise<void> | void
 	}
