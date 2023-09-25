@@ -40,7 +40,7 @@ module.exports = function (client, options) {
 
     // Reinitialize client object with new version TODO: move out of its constructor?
     client.version = minecraftVersion
-    await options?.versionSelectedHook(client)
+    await options.versionSelectedHook?.(client)
     client.state = states.HANDSHAKING
 
     // Let other plugins such as Forge/FML (modinfo) respond to the ping response
