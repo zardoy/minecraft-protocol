@@ -106,7 +106,13 @@ class Client extends EventEmitter {
       } else if (this._mcBundle.length) {
         this._mcBundle.push(parsed)
       } else {
-        emitPacket(parsed)
+        try {
+          emitPacket(parsed)
+        } catch (err) {
+          console.log('Client incorrectly handled packet ' + parsed.metadata.name)
+          console.error(err)
+          // todo investigate why it doesn't close the stream even if unhandled there
+        }
       }
     })
   }
