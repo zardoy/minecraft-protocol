@@ -25,7 +25,11 @@ module.exports = function (client, options) {
         if (packet.serverId !== '-') {
           debug('This server appears to be an online server and you are providing no password, the authentication will probably fail')
         }
-        sendEncryptionKeyResponse()
+        client.end('This server appears to be an online server and you are providing no authentication. Try authenticating first.')
+        // sendEncryptionKeyResponse()
+        // client.once('set_compression', () => {
+        //   clearTimeout(loginTimeout)
+        // })
       }
 
       function onJoinServerResponse (err) {

@@ -88,10 +88,12 @@ class Client extends EventEmitter {
       parsed.metadata.name = parsed.data.name
       parsed.data = parsed.data.params
       parsed.metadata.state = state
-      debug('read packet ' + state + '.' + parsed.metadata.name)
-      if (debug.enabled) {
-        const s = JSON.stringify(parsed.data, null, 2)
-        debug(s && s.length > 10000 ? parsed.data : s)
+      if (!globalThis.excludeCommunicationDebugEvents?.includes(parsed.metadata.name)) {
+        debug('read packet ' + state + '.' + parsed.metadata.name)
+        if (debug.enabled) {
+          const s = JSON.stringify(parsed.data, null, 2)
+          debug(s && s.length > 10000 ? parsed.data : s)
+        }
       }
       if (this._hasBundlePacket && parsed.metadata.name === 'bundle_delimiter') {
         if (this._mcBundle.length) { // End bundle
@@ -109,7 +111,13 @@ class Client extends EventEmitter {
           this._hasBundlePacket = false
         }
       } else {
-        emitPacket(parsed)
+        try {
+          emitPacket(parsed)
+        } catch (err) {
+          console.log('Client incorrectly handled packet ' + parsed.metadata.name)
+          console.error(err)
+          // todo investigate why it doesn't close the stream even if unhandled there
+        }
       }
     })
   }
@@ -166,7 +174,10 @@ class Client extends EventEmitter {
     }
 
     const onFatalError = (err) => {
-      this.emit('error', err)
+      // todo find out what is trying to write after client disconnect
+      if(err.code !== 'ECONNABORTED') {
+        this.emit('error', err)
+      }
       endSocket()
     }
 
@@ -195,6 +206,8 @@ class Client extends EventEmitter {
     serializer -> framer -> socket -> splitter -> deserializer */
     if (this.serializer) {
       this.serializer.end()
+      this.socket?.end()
+      this.socket?.emit('end')
     } else {
       if (this.socket) this.socket.end()
     }
@@ -236,8 +249,11 @@ class Client extends EventEmitter {
 
   write (name, params) {
     if (!this.serializer.writable) { return }
-    debug('writing packet ' + this.state + '.' + name)
-    debug(params)
+    if (!globalThis.excludeCommunicationDebugEvents?.includes(name)) {
+      debug(`[${this.state}] from ${this.isServer ? 'server' : 'client'}: ` + name)
+      debug(params)
+    }
+    this.emit('writePacket', name, params)
     this.serializer.write({ name, params })
   }
 

@@ -141,6 +141,8 @@ declare module 'minecraft-protocol' {
 		disableChatSigning?: boolean
 		/** Pass custom client implementation if needed. */
 		Client?: Client
+		/** Can be used to prepare mc data on autoVersion (client.version has selected version) */
+		versionSelectedHook?: (client: Client) => Promise<void> | void
 	}
 
 	export class Server extends EventEmitter {
