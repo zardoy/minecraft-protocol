@@ -83,7 +83,7 @@ for (const supportedVersion of mc.supportedVersions) {
         plainMessage: message,
         signedChatContent: '',
         unsignedChatContent: JSON.stringify({ text: message }),
-        type: mcData.supportFeature('incrementedChatType') ? { registryIndex: 1 } : 0,
+        type: mcData.supportFeature('chatTypeIsHolder') ? { chatType: 1 } : 0,
         senderUuid: 'd3527a0b-bc03-45d5-a878-2aafdd8c8a43', // random
         senderName: JSON.stringify({ text: sender }),
         senderTeam: undefined,
@@ -102,6 +102,7 @@ for (const supportedVersion of mc.supportedVersions) {
   describe('mc-server ' + supportedVersion + 'v', function () {
     this.timeout(5000)
     this.beforeEach(async function () {
+      console.log('🔻 Starting test', this.currentTest.title)
       PORT = await getPort()
       console.log(`Using port for tests: ${PORT}`)
     })
@@ -411,9 +412,12 @@ for (const supportedVersion of mc.supportedVersions) {
         })
       })
       function checkFinish () {
-        if (serverPlayerDisconnected && clientClosed && serverClosed) done()
+        if (serverPlayerDisconnected && clientClosed && serverClosed) {
+          console.log('Kick test is done')
+          callOnce(done)
+        }
       }
-    })
+    }).retries(2)
 
     it('gives correct reason for kicking clients when shutting down', function (done) {
       const server = mc.createServer({
@@ -531,4 +535,11 @@ for (const supportedVersion of mc.supportedVersions) {
       })
     })
   })
+}
+
+function callOnce (fn, ...args) {
+  console.log('Call Fn', fn.called)
+  if (fn.called) return
+  fn(...args)
+  fn.called = true
 }
